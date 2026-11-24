@@ -452,6 +452,7 @@ function initPredictSearch() {
   clearBtn.addEventListener('click', () => {
     input.value = '';
     clearBtn.style.display = 'none';
+    resetToDefaultEmptyState();
     fetchResults('');
     input.focus();
   });
@@ -486,16 +487,62 @@ async function fetchResults(q, autoSelectFirst = false) {
   }
 }
 
+function resetToNotFoundState() {
+  currentSelectedSong = null;
+  const activeCard = document.getElementById('predict-active-card');
+  if (activeCard) activeCard.style.display = 'none';
+
+  const emptyState = document.getElementById('predict-empty-state');
+  if (emptyState) {
+    emptyState.style.display = 'block';
+    emptyState.innerHTML = `
+      <div class="empty-icon" style="color: var(--accent-rose, #e11d48);">
+        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="15" y1="9" x2="9" y2="15"></line>
+          <line x1="9" y1="9" x2="15" y2="15"></line>
+        </svg>
+      </div>
+      <h3>Música não encontrada</h3>
+      <p>Nenhuma faixa correspondente foi localizada no catálogo. Não há atributos sonoros nem predições para exibir.</p>
+    `;
+  }
+}
+
+function resetToDefaultEmptyState() {
+  currentSelectedSong = null;
+  const activeCard = document.getElementById('predict-active-card');
+  if (activeCard) activeCard.style.display = 'none';
+
+  const emptyState = document.getElementById('predict-empty-state');
+  if (emptyState) {
+    emptyState.style.display = 'block';
+    emptyState.innerHTML = `
+      <div class="empty-icon">
+        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M8 12l3 3 5-5"></path>
+        </svg>
+      </div>
+      <h3>Nenhuma música selecionada</h3>
+      <p>Clique em uma das sugestões ao lado ou pesquise pelo nome de qualquer faixa para visualizar seus atributos sonoros e rodar os modelos RandomForest, XGBoost e Rede Neural MLP.</p>
+    `;
+  }
+}
+
 function renderSearchResults(songs, autoSelectFirst = false) {
   const container = document.getElementById('search-results-container');
   if (!container) return;
 
   if (songs.length === 0) {
     container.innerHTML = `
-      <div class="empty-state" style="padding: 1.5rem;">
-        <p>Nenhuma música correspondente encontrada no catálogo.</p>
+      <div class="empty-state not-found-card" style="padding: 1.5rem; text-align: center; border: 1px dashed var(--border-subtle); border-radius: var(--radius-md);">
+        <div style="font-size: 1.8rem; margin-bottom: 0.4rem;">🔍🚫</div>
+        <h4 style="margin: 0 0 0.3rem 0; font-size: 0.95rem; font-weight: 750; color: var(--text-primary);">Música não encontrada</h4>
+        <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">Esta faixa não existe no catálogo.</p>
       </div>
     `;
+    resetToNotFoundState();
     return;
   }
 

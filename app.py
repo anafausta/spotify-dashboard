@@ -624,14 +624,10 @@ def search_songs(q: str = ""):
         artist = (s.get("track_artist") or "").lower()
         if query in title or query in artist:
             matches.append(s)
-            if len(matches) >= 12:
+            if len(matches) >= 15:
                 break
 
-    # 2. Se a música não estiver nas amostras locais, sintetiza os dados acústicos reais
-    if len(matches) == 0:
-        ai_song = synthesize_ai_song(q)
-        matches.append(ai_song)
-
+    # Se não encontrar, retorna vazio (sem sintetizar faixas fictícias)
     return {"results": matches}
 
 @app.post("/api/predict")
