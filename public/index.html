@@ -6,7 +6,7 @@
   <title>Spotify Hit Prediction & Analytics — EDA & Machine Learning</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -22,30 +22,38 @@
         </div>
         <div>
           <h1 class="brand-title">Spotify Intelligence</h1>
-          <p class="brand-subtitle">EDA & Previsão de Hits com Machine Learning</p>
+          <p class="brand-subtitle">EDA & Previsão de Hits com Machine Learning (Base de 1,18M faixas)</p>
         </div>
       </div>
 
-      <!-- Navigation Tabs -->
-      <nav class="tabs-nav">
-        <button class="tab-btn active" data-tab="tab-dashboard">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="7" height="9" rx="1"></rect>
-            <rect x="14" y="3" width="7" height="5" rx="1"></rect>
-            <rect x="14" y="12" width="7" height="9" rx="1"></rect>
-            <rect x="3" y="16" width="7" height="5" rx="1"></rect>
-          </svg>
-          Dashboards & Resultados
+      <div class="header-controls">
+        <!-- Theme Toggle Button -->
+        <button id="theme-toggle-btn" class="theme-toggle-btn" title="Alternar entre modo claro e escuro">
+          <span id="theme-icon">🌙</span>
+          <span id="theme-text">Modo Escuro</span>
         </button>
-        <button class="tab-btn" data-tab="tab-predict">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 18V5l12-2v13"></path>
-            <circle cx="6" cy="18" r="3"></circle>
-            <circle cx="18" cy="16" r="3"></circle>
-          </svg>
-          Classificador de Música
-        </button>
-      </nav>
+
+        <!-- Navigation Tabs -->
+        <nav class="tabs-nav">
+          <button class="tab-btn active" data-tab="tab-dashboard">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="9" rx="1"></rect>
+              <rect x="14" y="3" width="7" height="5" rx="1"></rect>
+              <rect x="14" y="12" width="7" height="9" rx="1"></rect>
+              <rect x="3" y="16" width="7" height="5" rx="1"></rect>
+            </svg>
+            Dashboards & Resultados
+          </button>
+          <button class="tab-btn" data-tab="tab-predict">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 18V5l12-2v13"></path>
+              <circle cx="6" cy="18" r="3"></circle>
+              <circle cx="18" cy="16" r="3"></circle>
+            </svg>
+            Classificador de Música
+          </button>
+        </nav>
+      </div>
     </header>
 
     <!-- TAB 1: DASHBOARD & RESULTS -->
@@ -55,12 +63,12 @@
         <div class="kpi-card">
           <div class="kpi-label">Base Total de Faixas</div>
           <div class="kpi-value" id="kpi-tracks">1.182.354</div>
-          <div class="kpi-desc">80% Treino / 20% Teste (Fase 2)</div>
+          <div class="kpi-desc">80% Treino (949k) / 20% Teste (114k)</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">Taxa Real de Hits (>= 50)</div>
+          <div class="kpi-label">Taxa Real de Hits (&ge; 50)</div>
           <div class="kpi-value highlight-green" id="kpi-hitrate">5,09%</div>
-          <div class="kpi-desc">Forte desbalanceamento de classes</div>
+          <div class="kpi-desc">Forte desbalanceamento de classes real</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-label">Melhor Modelo (ROC-AUC)</div>
@@ -70,9 +78,17 @@
         <div class="kpi-card">
           <div class="kpi-label">Lift no Top 5% Previsto</div>
           <div class="kpi-value highlight-cyan" id="kpi-lift">8.17x</div>
-          <div class="kpi-desc">Maior que seleção aleatória (39.7% precisão)</div>
+          <div class="kpi-desc">8x mais assertivo que escolha aleatória</div>
         </div>
       </section>
+
+      <!-- Guia rápido explicativo para facilitar a leitura -->
+      <div class="info-guide-banner">
+        <div class="info-guide-icon">💡</div>
+        <div class="info-guide-text">
+          <strong>Como entender este Dashboard:</strong> Uma música é classificada como <strong>Hit</strong> quando sua popularidade no Spotify atinge <strong>50 ou mais</strong> (apenas 5% do catálogo). Os algoritmos de Machine Learning analisam atributos de áudio (dançabilidade, energia, volume, etc.) para identificar padrões matemáticos de sucesso comercial.
+        </div>
+      </div>
 
       <!-- Section: Machine Learning Results -->
       <section class="section">
@@ -81,7 +97,7 @@
             <h2 class="section-title">Resultados de Machine Learning — Fase 2</h2>
             <p class="section-subtitle">Avaliação real no conjunto de teste independente (114.552 faixas)</p>
           </div>
-          <div class="badge badge-accent">Dados Reais Extraídos do Notebook</div>
+          <div class="badge badge-accent">Modelos Treinados & Calibrados</div>
         </div>
 
         <!-- Models Comparison Table -->
@@ -90,11 +106,11 @@
             <thead>
               <tr>
                 <th>Modelo</th>
-                <th>ROC-AUC</th>
-                <th>PR-AUC</th>
+                <th>ROC-AUC <span title="Capacidade de discriminar Hits de Não-Hits (0 a 1)">ℹ️</span></th>
+                <th>PR-AUC <span title="Área sob curva Precisão-Recall (foco no desbalanceamento)">ℹ️</span></th>
                 <th>F1-Score (Hit)</th>
-                <th>Recall (Hit)</th>
-                <th>Precisão</th>
+                <th>Recall (Hit) <span title="% de hits reais que o modelo encontrou">ℹ️</span></th>
+                <th>Precisão <span title="% de acerto quando o modelo diz que é Hit">ℹ️</span></th>
                 <th>Acurácia</th>
                 <th>Limiar Ótimo</th>
                 <th>Lift Top 5%</th>
@@ -112,7 +128,7 @@
           <div class="chart-card">
             <div class="chart-header">
               <h3 class="chart-title">Comparativo de Métricas Chave (ROC-AUC vs PR-AUC)</h3>
-              <span class="chart-tag">Base Teste</span>
+              <span class="chart-tag">Base Teste (114k)</span>
             </div>
             <div class="chart-wrapper">
               <canvas id="chartModelsComparison"></canvas>
@@ -131,11 +147,11 @@
         </div>
 
         <!-- Confusion Matrix Viewer -->
-        <div class="card matrix-section">
+        <div class="matrix-section">
           <div class="matrix-header">
             <div>
               <h3 class="chart-title">Matriz de Confusão no Ponto de Operação Ótimo</h3>
-              <p class="matrix-desc">Selecione o modelo para inspecionar os acertos e falsos positivos/negativos na base de teste.</p>
+              <p class="matrix-desc">Clique nos modelos abaixo para ver os acertos reais, falsos alarmes e perdas na base de teste:</p>
             </div>
             <div class="model-pills" id="matrix-model-pills">
               <!-- Buttons rendered via JS -->
@@ -154,7 +170,7 @@
             <h2 class="section-title">Análise Exploratória de Dados (EDA)</h2>
             <p class="section-subtitle">Comportamento estatístico e sonoro das faixas na biblioteca Spotify Full</p>
           </div>
-          <div class="badge">eda_spotify (1).ipynb</div>
+          <div class="badge">eda_spotify.ipynb</div>
         </div>
 
         <div class="charts-grid-3">
@@ -162,13 +178,13 @@
           <div class="chart-card">
             <div class="chart-header">
               <h3 class="chart-title">Distribuição da Variável Alvo</h3>
-              <span class="chart-tag">is_hit</span>
+              <span class="chart-tag">Proporção Real</span>
             </div>
             <div class="chart-wrapper doughnut-wrapper">
               <canvas id="chartTargetDistribution"></canvas>
             </div>
             <div class="chart-insight-box">
-              <strong>Desbalanceamento Severo:</strong> Apenas 5,09% das faixas atingem popularidade &ge; 50. Por isso, a acurácia ingênua de 94.9% não reflete capacidade preditiva real.
+              <strong>Desbalanceamento Severo:</strong> Apenas 5,09% das faixas atingem popularidade &ge; 50. Por isso, usamos métricas especializadas como PR-AUC e Lift.
             </div>
           </div>
 
@@ -176,13 +192,13 @@
           <div class="chart-card">
             <div class="chart-header">
               <h3 class="chart-title">Perfil Acústico: Hit vs Não-Hit</h3>
-              <span class="chart-tag">Médias Normalizadas</span>
+              <span class="chart-tag">Médias Comparadas</span>
             </div>
             <div class="chart-wrapper">
               <canvas id="chartAudioProfile"></canvas>
             </div>
             <div class="chart-insight-box">
-              Hits apresentam maior <strong>Dançabilidade (+24.9%)</strong> e <strong>Loudness</strong>, enquanto faixas comuns possuem acústica consideravelmente maior (+68.7%).
+              Hits apresentam maior <strong>Dançabilidade (+24.9%)</strong> e <strong>Volume</strong>, enquanto faixas comuns possuem acústica muito maior (+68.7%).
             </div>
           </div>
 
@@ -190,13 +206,13 @@
           <div class="chart-card">
             <div class="chart-header">
               <h3 class="chart-title">Taxa de Hits por Gênero</h3>
-              <span class="chart-tag">Top Gêneros</span>
+              <span class="chart-tag">Maiores Proporções</span>
             </div>
             <div class="chart-wrapper">
               <canvas id="chartGenres"></canvas>
             </div>
             <div class="chart-insight-box">
-              <strong>Pop</strong> e <strong>Hip-Hop</strong> lideram a probabilidade de entrar no ranking de hits, enquanto Clássica e Metal têm menor aderência comercial massiva.
+              <strong>Pop</strong> e <strong>Hip-Hop</strong> lideram as chances de sucesso massivo, enquanto Clássica e Instrumental têm menor alcance de hits no streaming.
             </div>
           </div>
         </div>
@@ -205,7 +221,7 @@
         <div class="chart-card" style="margin-top: 1.5rem;">
           <div class="chart-header">
             <h3 class="chart-title">Evolução Histórica da Música (1960 — 2020)</h3>
-            <span class="chart-tag">Tendência Sonora & % de Hits</span>
+            <span class="chart-tag">Tendência Sonora & % de Hits ao Longo das Décadas</span>
           </div>
           <div class="chart-wrapper" style="height: 280px;">
             <canvas id="chartTemporal"></canvas>
@@ -220,8 +236,8 @@
         <!-- Search & Control Column -->
         <div class="predict-search-panel">
           <div class="panel-header">
-            <h2 class="panel-title">Consultar ou Digitar uma Música</h2>
-            <p class="panel-desc">Digite o nome da faixa ou artista para buscar no dataset real e executar os 3 modelos de Machine Learning.</p>
+            <h2 class="panel-title">Buscar ou Testar uma Música</h2>
+            <p class="panel-desc">Digite o nome da faixa ou artista para carregar as características sonoras e rodar os 3 modelos de Inteligência Artificial em tempo real.</p>
           </div>
 
           <div class="search-box">
@@ -230,19 +246,19 @@
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
             <input type="text" id="song-search-input" class="search-input" placeholder="Ex: Flowers, Blinding Lights, As It Was, Bohemian Rhapsody..." autocomplete="off">
-            <button id="clear-search-btn" class="clear-btn" style="display: none;">&times;</button>
+            <button id="clear-search-btn" class="clear-btn" style="display: none;" title="Limpar busca">&times;</button>
           </div>
 
           <!-- Quick Suggestion Pills -->
           <div class="quick-suggestions">
-            <span class="quick-title">Sugestões rápidas:</span>
+            <span class="quick-title">Sugestões de teste rápido:</span>
             <div class="pills-wrapper">
               <button class="quick-pill" data-song="Flowers" data-artist="Miley Cyrus">Flowers — Miley Cyrus</button>
               <button class="quick-pill" data-song="Blinding Lights" data-artist="The Weeknd">Blinding Lights — The Weeknd</button>
               <button class="quick-pill" data-song="As It Was" data-artist="Harry Styles">As It Was — Harry Styles</button>
               <button class="quick-pill" data-song="Shape of You" data-artist="Ed Sheeran">Shape of You — Ed Sheeran</button>
               <button class="quick-pill" data-song="Take on Me" data-artist="a-ha">Take on Me — a-ha</button>
-              <button class="quick-pill" data-song="Lordi" data-artist="Lordi">Lordi (Não-Hit)</button>
+              <button class="quick-pill" data-song="Lordi" data-artist="Lordi">Hard Rock Hallelujah (Não-Hit)</button>
             </div>
           </div>
 
@@ -263,7 +279,7 @@
               </svg>
             </div>
             <h3>Nenhuma música selecionada</h3>
-            <p>Selecione uma das sugestões ao lado ou digite o nome de uma música para ver a classificação real do dataset e rodar os modelos RandomForest, XGBoost e TensorFlow.</p>
+            <p>Clique em uma das sugestões ao lado ou pesquise pelo nome de uma faixa para visualizar seus dados acústicos e rodar os modelos RandomForest, XGBoost e Rede Neural MLP.</p>
           </div>
 
           <!-- Active Song View -->
@@ -277,8 +293,8 @@
                 <div class="song-specs">
                   <span id="meta-year">2023</span> &bull; 
                   <span id="meta-duration">3:20</span> &bull; 
-                  <span id="meta-key">Tom: C</span> &bull; 
-                  <span id="meta-explicit">Livre</span>
+                  <span id="meta-key">Tom: C Maior</span> &bull; 
+                  <span id="meta-explicit">Classificação Livre</span>
                 </div>
               </div>
 
@@ -294,40 +310,40 @@
                   <div class="meter-bar-bg">
                     <div class="meter-bar-fill" id="meta-popularity-bar" style="width: 85%;"></div>
                   </div>
-                  <span class="meter-hint">Limiar: &ge; 50 &rarr; Hit</span>
+                  <span class="meter-hint">Critério: &ge; 50 pontos = Hit</span>
                 </div>
               </div>
             </div>
 
             <!-- Audio Features Overview -->
             <div class="audio-features-grid">
-              <div class="feature-item">
+              <div class="feature-item" title="Quão dançante é a música baseado em andamento e ritmo">
                 <span class="feat-name">Dançabilidade</span>
                 <span class="feat-val" id="feat-dance">0.75</span>
                 <div class="mini-bar"><div class="mini-bar-fill" id="bar-dance" style="width: 75%;"></div></div>
               </div>
-              <div class="feature-item">
+              <div class="feature-item" title="Intensidade e percepção de atividade dinâmica">
                 <span class="feat-name">Energia</span>
                 <span class="feat-val" id="feat-energy">0.68</span>
                 <div class="mini-bar"><div class="mini-bar-fill" id="bar-energy" style="width: 68%;"></div></div>
               </div>
-              <div class="feature-item">
-                <span class="feat-name">Valência (Positividade)</span>
+              <div class="feature-item" title="Positividade musical e sensação de humor alegre">
+                <span class="feat-name">Valência (Alegria)</span>
                 <span class="feat-val" id="feat-valence">0.55</span>
                 <div class="mini-bar"><div class="mini-bar-fill" id="bar-valence" style="width: 55%;"></div></div>
               </div>
-              <div class="feature-item">
+              <div class="feature-item" title="Presença de instrumentos acústicos vs eletrônicos">
                 <span class="feat-name">Acústica</span>
                 <span class="feat-val" id="feat-acoustic">0.12</span>
                 <div class="mini-bar"><div class="mini-bar-fill" id="bar-acoustic" style="width: 12%;"></div></div>
               </div>
-              <div class="feature-item">
+              <div class="feature-item" title="Volume médio ponderado em decibéis (dB)">
                 <span class="feat-name">Volume (Loudness)</span>
                 <span class="feat-val" id="feat-loudness">-5.2 dB</span>
                 <div class="mini-bar"><div class="mini-bar-fill" id="bar-loudness" style="width: 80%;"></div></div>
               </div>
-              <div class="feature-item">
-                <span class="feat-name">Tempo (BPM)</span>
+              <div class="feature-item" title="Velocidade da música em batidas por minuto">
+                <span class="feat-name">Ritmo (BPM)</span>
                 <span class="feat-val" id="feat-tempo">118 BPM</span>
                 <div class="mini-bar"><div class="mini-bar-fill" id="bar-tempo" style="width: 60%;"></div></div>
               </div>
@@ -338,21 +354,21 @@
               <div class="inference-header">
                 <div>
                   <h3 class="inference-title">Predição em Tempo Real dos 3 Modelos</h3>
-                  <p class="inference-desc">Executando RandomForest, XGBoost e TensorFlow com pesos da Fase 2</p>
+                  <p class="inference-desc">Execução simultânea de RandomForest, XGBoost e Rede Neural MLP com os pesos da Fase 2</p>
                 </div>
                 <button id="re-run-btn" class="btn-primary">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="23 4 23 10 17 10"></polyline>
                     <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
                   </svg>
-                  Reexecutar Modelos
+                  Recalcular Predição
                 </button>
               </div>
 
               <!-- Loading Indicator -->
               <div id="inference-loading" class="inference-loading" style="display: none;">
                 <div class="spinner"></div>
-                <span>Processando features nos tensores e árvores...</span>
+                <span>Processando atributos nos modelos de Machine Learning...</span>
               </div>
 
               <!-- Models Results Grid -->
@@ -368,12 +384,12 @@
                   <div class="prob-bar-bg">
                     <div class="prob-bar-fill" id="rf-bar" style="width: 74.5%;"></div>
                   </div>
-                  <div class="model-threshold-note">Limiar de corte: <strong>0.69</strong> (ajuste F1)</div>
+                  <div class="model-threshold-note">Limiar de corte: <strong>0.69</strong> (ajuste balanceado)</div>
                 </div>
 
                 <!-- XGBoost Card -->
                 <div class="model-pred-card highlighted-card" id="card-xgb">
-                  <div class="model-badge highlight-badge">XGBoost (Melhor Modelo)</div>
+                  <div class="model-badge highlight-badge">XGBoost (Melhor Modelo) ⭐</div>
                   <div class="model-pred-status" id="xgb-status">HIT</div>
                   <div class="prob-wrapper">
                     <span class="prob-label">Probabilidade Calculada:</span>
@@ -382,12 +398,12 @@
                   <div class="prob-bar-bg">
                     <div class="prob-bar-fill" id="xgb-bar" style="width: 81.2%;"></div>
                   </div>
-                  <div class="model-threshold-note">Limiar de corte: <strong>0.52</strong> (balanceado)</div>
+                  <div class="model-threshold-note">Limiar de corte: <strong>0.52</strong> (ROC-AUC 0.8864)</div>
                 </div>
 
                 <!-- TensorFlow MLP Card -->
                 <div class="model-pred-card" id="card-tf">
-                  <div class="model-badge">TensorFlow MLP</div>
+                  <div class="model-badge">TensorFlow MLP (Rede Neural)</div>
                   <div class="model-pred-status" id="tf-status">HIT</div>
                   <div class="prob-wrapper">
                     <span class="prob-label">Probabilidade Calculada:</span>
@@ -396,7 +412,7 @@
                   <div class="prob-bar-bg">
                     <div class="prob-bar-fill" id="tf-bar" style="width: 78.0%;"></div>
                   </div>
-                  <div class="model-threshold-note">Limiar de corte: <strong>0.51</strong> (sigmoide)</div>
+                  <div class="model-threshold-note">Limiar de corte: <strong>0.51</strong> (sigmoide calibrada)</div>
                 </div>
               </div>
 
