@@ -1,32 +1,22 @@
 @echo off
-title Spotify Intelligence - Iniciar Servidor e Link Publico
+title Spotify Intelligence - Dashboard & Classificador de Hits
 echo ========================================================
 echo       INICIANDO SPOTIFY INTELLIGENCE DASHBOARD
 echo ========================================================
 echo.
-echo [1/2] Verificando Docker...
-docker ps >nul 2>&1
-if %errorlevel% neq 0 (
-    echo [AVISO] O Docker Desktop parece estar fechado.
-    echo Por favor, abra o Docker Desktop para as predicoes funcionarem!
-    echo.
-) else (
-    echo [OK] Docker esta ativo!
-)
+cd /d "%~dp0"
 
-echo.
-echo [2/2] Iniciando Servidor Node.js...
-start "Spotify Servidor Local" cmd /k "cd /d C:\Users\Letic\.gemini\antigravity\scratch\spotify-dashboard && node server.js"
+echo [1/2] Iniciando Servidor Python FastAPI...
+start "Spotify Servidor" cmd /k "cd /d "%~dp0" && python app.py"
 
-timeout /t 2 >nul
+timeout /t 3 >nul
+
+echo [2/2] Abrindo navegador...
+start http://localhost:7860
 
 echo.
 echo ========================================================
-echo [OK] Servidor aberto em: http://localhost:3000
-echo.
-echo Iniciando Tunel Publico da Cloudflare...
-echo Copie o link 'https://...trycloudflare.com' que aparecer abaixo!
+echo [OK] Dashboard em execucao em: http://localhost:7860
 echo ========================================================
 echo.
-C:\Users\Letic\.gemini\antigravity\scratch\cloudflared.exe tunnel --url http://localhost:3000
 pause

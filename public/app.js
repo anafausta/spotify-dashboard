@@ -607,10 +607,10 @@ function selectSong(song) {
   document.getElementById('tf-prob').textContent = '--%';
   document.getElementById('tf-bar').style.width = '20%';
 
-  document.getElementById('ai-user-badge').textContent = '⏳ Analisando...';
-  document.getElementById('ai-summary-text').textContent = 'Analisando características musicais com inteligência artificial...';
-  document.getElementById('ai-user-desc-text').textContent = 'Carregando comportamento e recepção nas plataformas de streaming...';
-  document.getElementById('ai-model-rationale-text').textContent = 'Avaliando correlação de dançabilidade, loudness e volume com os limiares de decisão...';
+  const aiSummary = document.getElementById('ai-summary-text');
+  if (aiSummary) aiSummary.textContent = 'Analisando características acústicas da faixa...';
+  const aiRationale = document.getElementById('ai-model-rationale-text');
+  if (aiRationale) aiRationale.textContent = 'Avaliando correlação de dançabilidade, loudness e volume com os limiares de decisão...';
 
   // Executa predição em tempo real nos 3 modelos
   executeModelsInference(song);
@@ -674,14 +674,13 @@ function renderInferenceResults(pred) {
   tfBar.style.width = `${Math.max(5, tf.probability * 100)}%`;
   tfBar.className = `prob-bar-fill ${isTfHit ? '' : 'bar-nohit'}`;
 
-  // 4. Painel de Inteligência Artificial
+  // 4. Painel de Análise Acústica e Modelos
   if (pred.ai_analysis) {
     const ai = pred.ai_analysis;
-    const badge = document.getElementById('ai-user-badge');
-    badge.textContent = ai.user_classification || '🔥 Fenômeno de Streaming';
-    document.getElementById('ai-summary-text').textContent = ai.ai_summary || '';
-    document.getElementById('ai-user-desc-text').textContent = ai.user_desc || '';
-    document.getElementById('ai-model-rationale-text').textContent = ai.model_rationale || '';
+    const aiSummary = document.getElementById('ai-summary-text');
+    if (aiSummary) aiSummary.textContent = ai.ai_summary || '';
+    const aiRationale = document.getElementById('ai-model-rationale-text');
+    if (aiRationale) aiRationale.textContent = ai.model_rationale || '';
   }
 
   // 5. Consensus Box

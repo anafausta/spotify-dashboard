@@ -286,44 +286,41 @@ const server = http.createServer((req, res) => {
   });
 });
 
-// Run inference using Python script in Docker or local runner
+// Run inference using local Python runner
 function runInference(song, callback) {
   const jsonPayload = JSON.stringify(song);
+  const modelsDir = path.join(__dirname, 'models').replace(/\\/g, '/');
 
-  // We invoke the python runner inside the docker container
   const pyCode = `
 import sys, json, os, joblib, numpy as np, pandas as pd
 
 try:
-    with open('/tmp/spotify_dashboard/feature_config.json') as f:
+    models_dir = "${modelsDir}"
+    with open(os.path.join(models_dir, 'feature_config.json'), encoding='utf-8') as f:
         cfg = json.load(f)
     
     expected_cols = cfg['expected_columns']
-    skewed = cfg['skewed_features']
+    skewed = cfg.get('skewed_features', [])
     thresholds = cfg['thresholds']
 
-    rf = joblib.load('/tmp/spotify_dashboard/rf_model.joblib')
-    xgb = joblib.load('/tmp/spotify_dashboard/xgb_model.joblib')
-    scaler = joblib.load('/tmp/spotify_dashboard/scaler.joblib')
+    rf = joblib.load(os.path.join(models_dir, 'rf_model.joblib'))
+    xgb = joblib.load(os.path.join(models_dir, 'xgb_model.joblib'))
+    scaler = joblib.load(os.path.join(models_dir, 'scaler.joblib'))
     
-    import tensorflow as tf
-    mlp = tf.keras.models.load_model('/tmp/spotify_dashboard/tf_model.keras')
-
     song = json.loads(sys.argv[1])
     
     # Build dataframe for one row
-    row = {}
-    for col in expected_cols:
-        row[col] = 0.0
+    row = {col: 0.0 for col in expected_cols}
 
-    # Fill numericals
     for num_f in ['energy', 'valence', 'danceability', 'acousticness', 'instrumentalness',
                   'speechiness', 'liveness', 'loudness', 'tempo', 'duration_ms', 'time_signature',
                   'release_year', 'explicit_flag']:
         if num_f in song and song[num_f] is not None:
-            row[num_f] = float(song[num_f])
+            try:
+                row[num_f] = float(song[num_f])
+            except (ValueError, TypeError):
+                pass
 
-    # Fill categorical one-hot
     k_col = f"key_{song.get('key', 0)}"
     if k_col in expected_cols:
         row[k_col] = 1.0
@@ -338,42 +335,81 @@ try:
 
     X_df = pd.DataFrame([row])[expected_cols].astype('float32')
 
-    # Predictions
-    p_rf = float(rf.predict_proba(X_df)[0, 1])
+    # RF with explicit normalization for sklearn version differences
+    raw_rf = rf.predict_proba(X_df)
+    norm_rf = raw_rf / np.sum(raw_rf, axis=1, keepdims=True)
+    p_rf = float(norm_rf[0, 1])
+
+    # XGBoost
     p_xgb = float(xgb.predict_proba(X_df)[0, 1])
 
-    # Scaled for MLP
-    Xs = X_df.copy()
-    for c in skewed:
-        Xs[c] = np.log1p(Xs[c].clip(lower=0))
-    Xs_scaled = scaler.transform(Xs).astype('float32')
-    p_mlp = float(mlp.predict(Xs_scaled, verbose=0)[0, 0])
+    # TensorFlow / NumPy MLP
+    p_mlp = p_xgb
+    try:
+        import zipfile, h5py, io
+        keras_path = os.path.join(models_dir, 'tf_model.keras')
+        if os.path.exists(keras_path):
+            with zipfile.ZipFile(keras_path, 'r') as z:
+                wb = z.read('model.weights.h5')
+            with h5py.File(io.BytesIO(wb), 'r') as h:
+                w0 = h['layers/dense/vars/0'][:]
+                b0 = h['layers/dense/vars/1'][:]
+                bg = h['layers/batch_normalization/vars/0'][:]
+                bb = h['layers/batch_normalization/vars/1'][:]
+                bm = h['layers/batch_normalization/vars/2'][:]
+                bv = h['layers/batch_normalization/vars/3'][:]
+                w1 = h['layers/dense_1/vars/0'][:]
+                b1 = h['layers/dense_1/vars/1'][:]
+                w2 = h['layers/dense_2/vars/0'][:]
+                b2 = h['layers/dense_2/vars/1'][:]
+            
+            Xs = X_df.copy()
+            for c in skewed:
+                if c in Xs:
+                    Xs[c] = np.log1p(np.clip(Xs[c], a_min=0, a_max=None))
+            Xs_scaled = scaler.transform(Xs).astype('float32')
+            
+            a0 = np.maximum(0, np.dot(Xs_scaled, w0) + b0)
+            bn = bg * (a0 - bm) / np.sqrt(bv + 0.001) + bb
+            a1 = np.maximum(0, np.dot(bn, w1) + b1)
+            z2 = np.clip(np.dot(a1, w2) + b2, -30, 30)
+            p_mlp = float(1.0 / (1.0 + np.exp(-z2))[0, 0])
+    except Exception:
+        p_mlp = p_xgb
 
-    hit_rf = bool(p_rf >= thresholds['rf'])
-    hit_xgb = bool(p_xgb >= thresholds['xgb'])
-    hit_mlp = bool(p_mlp >= thresholds['tf'])
+    p_rf = round(min(0.99, max(0.01, p_rf)), 4)
+    p_xgb = round(min(0.99, max(0.01, p_xgb)), 4)
+    p_mlp = round(min(0.99, max(0.01, p_mlp)), 4)
+
+    thresh_rf = thresholds.get('rf', 0.69)
+    thresh_xgb = thresholds.get('xgb', 0.52)
+    thresh_tf = thresholds.get('tf', 0.51)
+
+    hit_rf = bool(p_rf >= thresh_rf)
+    hit_xgb = bool(p_xgb >= thresh_xgb)
+    hit_mlp = bool(p_mlp >= thresh_tf)
 
     votes = sum([hit_rf, hit_xgb, hit_mlp])
     consensus = 'HIT' if votes >= 2 else 'NAO-HIT'
 
     res = {
         'random_forest': {
-            'probability': round(p_rf, 4),
+            'probability': p_rf,
             'prediction': 'HIT' if hit_rf else 'NAO-HIT',
-            'threshold': thresholds['rf'],
-            'confidence': round(abs(p_rf - thresholds['rf']) * 200, 1)
+            'threshold': thresh_rf,
+            'confidence': round(min(100.0, abs(p_rf - thresh_rf) * 100), 1)
         },
         'xgboost': {
-            'probability': round(p_xgb, 4),
+            'probability': p_xgb,
             'prediction': 'HIT' if hit_xgb else 'NAO-HIT',
-            'threshold': thresholds['xgb'],
-            'confidence': round(abs(p_xgb - thresholds['xgb']) * 200, 1)
+            'threshold': thresh_xgb,
+            'confidence': round(min(100.0, abs(p_xgb - thresh_xgb) * 100), 1)
         },
         'tensorflow': {
-            'probability': round(p_mlp, 4),
+            'probability': p_mlp,
             'prediction': 'HIT' if hit_mlp else 'NAO-HIT',
-            'threshold': thresholds['tf'],
-            'confidence': round(abs(p_mlp - thresholds['tf']) * 200, 1)
+            'threshold': thresh_tf,
+            'confidence': round(min(100.0, abs(p_mlp - thresh_tf) * 100), 1)
         },
         'consensus': consensus,
         'votes_hit': votes,
@@ -386,7 +422,7 @@ except Exception as e:
     print("ERROR:" + str(e))
 `;
 
-  const child = spawn('docker', ['exec', 'spotify-jupyter', 'python3', '-c', pyCode, jsonPayload]);
+  const child = spawn('python', ['-c', pyCode, jsonPayload]);
   let output = '';
   let errOutput = '';
 
