@@ -1112,6 +1112,7 @@ body.dark-theme .ai-intelligence-panel {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
+  min-width: 0;
 }
 
 .ai-card-box {
@@ -1119,6 +1120,9 @@ body.dark-theme .ai-intelligence-panel {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: 1rem 1.15rem;
+  min-width: 0;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .ai-card-box.full-width {
@@ -1135,29 +1139,20 @@ body.dark-theme .ai-intelligence-panel {
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  flex-wrap: wrap;
 }
 
 .ai-box-text {
   font-size: 0.85rem;
   color: var(--text-secondary);
   line-height: 1.5;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
 }
 
 .ai-box-text strong {
   color: var(--text-primary);
-}
-
-@media (max-width: 768px) {
-  .ai-content-grid {
-    grid-template-columns: 1fr;
-  }
-  .ai-card-box.full-width {
-    grid-column: span 1;
-  }
-  .ai-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
 }
 
 /* Inference Section */
@@ -1369,13 +1364,34 @@ body.dark-theme .ai-intelligence-panel {
 
 /* ================= RESPONSIVE BREAKPOINTS ================= */
 
+/* Global container and grid overflow safety */
+.predict-layout,
+.predict-search-panel,
+.predict-details-panel,
+.active-song-card,
+.ai-intelligence-panel,
+.ai-content-grid,
+.ai-card-box,
+.model-pred-card,
+.consensus-banner,
+.kpi-card,
+.chart-card,
+.feature-item,
+.dataset-verdict-box,
+.song-main-info,
+.table-container {
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* 1. Laptops / Pequenos Desktops */
 @media (max-width: 1280px) {
   .app-container {
     padding: 1.25rem 1.25rem 3rem;
   }
   
   .predict-layout {
-    grid-template-columns: 370px 1fr;
+    grid-template-columns: 360px 1fr;
     gap: 1.25rem;
   }
 
@@ -1384,17 +1400,15 @@ body.dark-theme .ai-intelligence-panel {
   }
 }
 
+/* 2. Tablets em Modo Retrato / Telas Médias */
 @media (max-width: 1023px) {
   .kpi-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .charts-grid-2 {
-    grid-template-columns: 1fr;
-  }
-
+  .charts-grid-2,
   .charts-grid-3 {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
   }
 
   .predict-layout {
@@ -1411,151 +1425,516 @@ body.dark-theme .ai-intelligence-panel {
   }
 }
 
+/* 3. Smartphones e Telas Menores (<= 768px) */
 @media (max-width: 768px) {
   html {
     font-size: 15px;
   }
 
   .app-container {
-    padding: 1rem 0.85rem 3rem;
+    padding: 0.85rem 0.65rem 3rem;
+    overflow-x: hidden;
   }
 
+  /* Header & Navegação */
   .header {
     flex-direction: column;
     align-items: stretch;
-    gap: 0.85rem;
-    margin-bottom: 1.25rem;
+    gap: 0.75rem;
+    margin-bottom: 1.15rem;
+  }
+
+  .brand {
+    gap: 0.65rem;
+  }
+
+  .brand-logo {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+
+  .brand-title {
+    font-size: 1.25rem;
+    line-height: 1.2;
+    overflow-wrap: break-word;
+  }
+
+  .brand-subtitle {
+    font-size: 0.75rem;
+    line-height: 1.35;
+    overflow-wrap: break-word;
   }
 
   .header-controls {
     flex-direction: column;
     width: 100%;
+    gap: 0.5rem;
+  }
+
+  .theme-toggle-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 38px;
+    font-size: 0.78rem;
   }
 
   .tabs-nav {
     width: 100%;
+    display: flex;
+    gap: 4px;
   }
 
   .tab-btn {
     flex: 1;
-    padding: 0.65rem 0.75rem;
-    font-size: 0.825rem;
+    padding: 0.55rem 0.4rem;
+    font-size: 0.78rem;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.25;
+    min-height: 38px;
   }
 
+  .tab-btn svg {
+    display: none; /* Oculta ícones nos botões de abas em telas pequenas para evitar aperto */
+  }
+
+  /* KPIs */
   .kpi-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
-    margin-bottom: 1.25rem;
+    gap: 0.6rem;
+    margin-bottom: 1.15rem;
   }
 
   .kpi-card {
-    padding: 1rem;
+    padding: 0.85rem 0.75rem;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .kpi-label {
+    font-size: 0.65rem;
+    line-height: 1.2;
+    overflow-wrap: break-word;
   }
 
   .kpi-value {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
+    line-height: 1.2;
+    overflow-wrap: break-word;
+    word-break: break-word;
   }
 
+  .kpi-desc {
+    font-size: 0.68rem;
+    line-height: 1.3;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  /* Guia Explicativo */
+  .info-guide-banner {
+    padding: 0.75rem 0.85rem;
+    gap: 0.65rem;
+    align-items: flex-start;
+  }
+
+  .info-guide-text {
+    font-size: 0.775rem;
+    line-height: 1.4;
+    overflow-wrap: break-word;
+  }
+
+  /* Seções e Tabelas */
   .section {
-    padding: 1.25rem;
+    padding: 1rem 0.85rem;
     border-radius: var(--radius-lg);
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.15rem;
   }
 
   .section-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.4rem;
+    margin-bottom: 1rem;
   }
 
-  .charts-grid-2,
-  .charts-grid-3 {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+  .section-title {
+    font-size: 1.15rem;
+    line-height: 1.25;
+    overflow-wrap: break-word;
+  }
+
+  .section-subtitle {
+    font-size: 0.78rem;
+    overflow-wrap: break-word;
+  }
+
+  .table-container {
+    margin-bottom: 1.25rem;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0.65rem 0.6rem;
+    font-size: 0.75rem;
+  }
+
+  /* Gráficos */
+  .chart-card {
+    padding: 0.95rem 0.85rem;
+    min-width: 0;
+  }
+
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .chart-title {
+    font-size: 0.88rem;
+    line-height: 1.3;
+    overflow-wrap: break-word;
   }
 
   .chart-wrapper {
-    height: 210px;
+    height: 195px;
   }
 
   .doughnut-wrapper {
-    height: 190px;
+    height: 180px;
+  }
+
+  .chart-insight-box {
+    font-size: 0.75rem;
+    padding: 0.65rem 0.75rem;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  /* Matriz de Confusão */
+  .matrix-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.65rem;
+  }
+
+  .model-pills {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .matrix-pill {
+    flex: 1 1 auto;
+    text-align: center;
+    font-size: 0.75rem;
+    padding: 0.4rem 0.55rem;
+    white-space: normal;
+    overflow-wrap: break-word;
   }
 
   .matrix-display {
     grid-template-columns: repeat(2, 1fr);
-    gap: 0.6rem;
+    gap: 0.5rem;
   }
 
   .matrix-quadrant {
-    padding: 0.85rem 0.5rem;
+    padding: 0.75rem 0.65rem;
+    min-width: 0;
+  }
+
+  .quad-name {
+    font-size: 0.7rem;
+    line-height: 1.25;
+    overflow-wrap: break-word;
   }
 
   .quad-val {
     font-size: 1.25rem;
   }
 
+  .quad-desc {
+    font-size: 0.68rem;
+    line-height: 1.3;
+    overflow-wrap: break-word;
+  }
+
+  /* Painel de Busca & Classificador */
   .predict-search-panel,
   .active-song-card {
-    padding: 1.25rem;
+    padding: 1rem 0.85rem;
     border-radius: var(--radius-lg);
   }
 
-  .search-results-list {
-    max-height: 350px;
+  .panel-title {
+    font-size: 1.15rem;
+    overflow-wrap: break-word;
   }
 
+  .panel-desc {
+    font-size: 0.78rem;
+    line-height: 1.4;
+    overflow-wrap: break-word;
+  }
+
+  .search-input {
+    font-size: 0.85rem;
+    padding: 0.75rem 2.5rem 0.75rem 2.4rem;
+    min-height: 42px;
+  }
+
+  .quick-pill {
+    font-size: 0.72rem;
+    padding: 0.35rem 0.65rem;
+    max-width: 100%;
+    white-space: normal;
+    text-align: left;
+    line-height: 1.3;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  .search-result-item {
+    padding: 0.65rem 0.8rem;
+    gap: 0.4rem;
+  }
+
+  .result-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .result-title {
+    font-size: 0.825rem;
+  }
+
+  .result-sub {
+    font-size: 0.7rem;
+  }
+
+  /* Metadados da Música Ativa */
   .song-meta-header {
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.85rem;
+    margin-bottom: 1.15rem;
+  }
+
+  .song-main-info {
+    width: 100%;
+    min-width: 0;
   }
 
   .song-title-display {
-    font-size: 1.4rem;
+    font-size: 1.35rem;
+    line-height: 1.25;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  .song-artist-display {
+    font-size: 0.925rem;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  .song-specs {
+    font-size: 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.5rem;
   }
 
   .dataset-verdict-box {
     width: 100%;
     min-width: 0;
+    padding: 0.85rem 1rem;
   }
 
+  .verdict-status {
+    font-size: 1.25rem;
+    margin: 0.2rem 0 0.5rem;
+  }
+
+  /* Grade de Atributos Sonoros */
   .audio-features-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 0.6rem;
+    gap: 0.55rem;
+    margin-bottom: 1.25rem;
   }
 
-  .models-results-grid {
+  .feature-item {
+    padding: 0.65rem;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .feat-name {
+    font-size: 0.68rem;
+    overflow-wrap: break-word;
+  }
+
+  .feat-val {
+    font-size: 0.95rem;
+    margin: 0.15rem 0 0.25rem;
+  }
+
+  /* Painel de Diagnóstico Acústico (IA & Modelos) */
+  .ai-intelligence-panel {
+    padding: 1rem 0.85rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .ai-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.45rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .ai-title-wrap {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .ai-title {
+    font-size: 0.95rem;
+    line-height: 1.3;
+    overflow-wrap: break-word;
+  }
+
+  .ai-subtitle {
+    font-size: 0.725rem;
+    line-height: 1.35;
+    overflow-wrap: break-word;
+  }
+
+  .ai-content-grid {
     grid-template-columns: 1fr;
-    gap: 0.75rem;
+    gap: 0.65rem;
   }
 
-  .model-pred-card {
-    padding: 1rem;
+  .ai-card-box {
+    padding: 0.85rem;
+    width: 100%;
+    min-width: 0;
+    overflow-wrap: break-word;
+    word-break: break-word;
   }
 
-  .model-pred-status {
-    font-size: 1.35rem;
+  .ai-box-label {
+    font-size: 0.7rem;
+    flex-wrap: wrap;
+  }
+
+  .ai-box-text {
+    font-size: 0.8rem;
+    line-height: 1.5;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+  /* Seção de Inferência & Modelos */
+  .inference-section {
+    padding: 1rem 0.85rem;
   }
 
   .inference-header {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 0.65rem;
+    margin-bottom: 1rem;
+  }
+
+  .inference-title {
+    font-size: 1rem;
+    line-height: 1.3;
+    overflow-wrap: break-word;
+  }
+
+  .inference-desc {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    overflow-wrap: break-word;
   }
 
   .btn-primary {
     width: 100%;
+    justify-content: center;
+    min-height: 40px;
+    font-size: 0.825rem;
+  }
+
+  .models-results-grid {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+    margin-bottom: 1rem;
+  }
+
+  .model-pred-card {
+    padding: 0.95rem 0.85rem;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .model-pred-status {
+    font-size: 1.3rem;
+  }
+
+  .prob-wrapper {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+  }
+
+  .model-threshold-note {
+    font-size: 0.7rem;
+    line-height: 1.3;
+    overflow-wrap: break-word;
+    word-break: break-word;
   }
 
   .consensus-banner {
-    flex-direction: row;
-    gap: 0.85rem;
-    padding: 0.95rem 1.15rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.85rem 0.95rem;
+    min-width: 0;
+  }
+
+  .consensus-icon {
+    font-size: 1.75rem;
+  }
+
+  .consensus-title {
+    font-size: 0.925rem;
+    line-height: 1.3;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  .consensus-desc {
+    font-size: 0.775rem;
+    line-height: 1.4;
+    overflow-wrap: break-word;
+    word-break: break-word;
   }
 }
 
-@media (max-width: 400px) {
+/* 4. Telas Ultra-Compactas (<= 480px) */
+@media (max-width: 480px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
   .kpi-value {
-    font-size: 1.35rem;
+    font-size: 1.25rem;
   }
 
   .matrix-display {
@@ -1563,6 +1942,18 @@ body.dark-theme .ai-intelligence-panel {
   }
 
   .audio-features-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.45rem;
+  }
+}
+
+/* 5. Telas Mínimas (<= 360px) */
+@media (max-width: 360px) {
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .audio-features-grid {
+    grid-template-columns: 1fr;
   }
 }
