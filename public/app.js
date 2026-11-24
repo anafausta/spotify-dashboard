@@ -439,6 +439,16 @@ function initPredictSearch() {
     }, 250);
   });
 
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const q = e.target.value.trim();
+      if (q) {
+        clearTimeout(searchDebounceTimeout);
+        fetchResults(q, true);
+      }
+    }
+  });
+
   clearBtn.addEventListener('click', () => {
     input.value = '';
     clearBtn.style.display = 'none';
@@ -497,7 +507,7 @@ function renderSearchResults(songs, autoSelectFirst = false) {
       </div>
       <div>
         <span class="result-tag ${song.is_hit === 1 ? 'tag-hit' : 'tag-nohit'}">
-          ${song.is_hit === 1 ? 'Hit' : 'Não-Hit'}
+          ${song.ai_synthesized ? '✨ IA ' : ''}${song.is_hit === 1 ? 'Hit' : 'Não-Hit'}
         </span>
       </div>
     </div>
@@ -581,6 +591,27 @@ function selectSong(song) {
   document.getElementById('feat-tempo').textContent = tempo;
   document.getElementById('bar-tempo').style.width = `${Math.min(100, ((song.tempo || 120) / 200) * 100)}%`;
 
+  // Reset visual state dos modelos enquanto calcula
+  document.getElementById('rf-status').textContent = 'Calculando...';
+  document.getElementById('rf-status').className = 'model-pred-status';
+  document.getElementById('rf-prob').textContent = '--%';
+  document.getElementById('rf-bar').style.width = '20%';
+
+  document.getElementById('xgb-status').textContent = 'Calculando...';
+  document.getElementById('xgb-status').className = 'model-pred-status';
+  document.getElementById('xgb-prob').textContent = '--%';
+  document.getElementById('xgb-bar').style.width = '20%';
+
+  document.getElementById('tf-status').textContent = 'Calculando...';
+  document.getElementById('tf-status').className = 'model-pred-status';
+  document.getElementById('tf-prob').textContent = '--%';
+  document.getElementById('tf-bar').style.width = '20%';
+
+  document.getElementById('ai-user-badge').textContent = '⏳ Analisando...';
+  document.getElementById('ai-summary-text').textContent = 'Analisando características musicais com inteligência artificial...';
+  document.getElementById('ai-user-desc-text').textContent = 'Carregando comportamento e recepção nas plataformas de streaming...';
+  document.getElementById('ai-model-rationale-text').textContent = 'Avaliando correlação de dançabilidade, loudness e volume com os limiares de decisão...';
+
   // Executa predição em tempo real nos 3 modelos
   executeModelsInference(song);
 }
@@ -600,11 +631,6 @@ async function executeModelsInference(song) {
     const data = await res.json();
     loading.style.display = 'none';
 
-    if (data.error) {
-      console.error('Erro de predição:', data.error);
-      return;
-    }
-
     renderInferenceResults(data);
   } catch (err) {
     loading.style.display = 'none';
@@ -623,7 +649,7 @@ function renderInferenceResults(pred) {
   rfStatus.className = `model-pred-status ${isRfHit ? 'status-hit' : 'status-nohit'}`;
   document.getElementById('rf-prob').textContent = (rf.probability * 100).toFixed(1) + '%';
   const rfBar = document.getElementById('rf-bar');
-  rfBar.style.width = `${rf.probability * 100}%`;
+  rfBar.style.width = `${Math.max(5, rf.probability * 100)}%`;
   rfBar.className = `prob-bar-fill ${isRfHit ? '' : 'bar-nohit'}`;
 
   // 2. XGBoost
@@ -634,7 +660,7 @@ function renderInferenceResults(pred) {
   xgbStatus.className = `model-pred-status ${isXgbHit ? 'status-hit' : 'status-nohit'}`;
   document.getElementById('xgb-prob').textContent = (xgb.probability * 100).toFixed(1) + '%';
   const xgbBar = document.getElementById('xgb-bar');
-  xgbBar.style.width = `${xgb.probability * 100}%`;
+  xgbBar.style.width = `${Math.max(5, xgb.probability * 100)}%`;
   xgbBar.className = `prob-bar-fill ${isXgbHit ? '' : 'bar-nohit'}`;
 
   // 3. TensorFlow MLP
@@ -645,10 +671,20 @@ function renderInferenceResults(pred) {
   tfStatus.className = `model-pred-status ${isTfHit ? 'status-hit' : 'status-nohit'}`;
   document.getElementById('tf-prob').textContent = (tf.probability * 100).toFixed(1) + '%';
   const tfBar = document.getElementById('tf-bar');
-  tfBar.style.width = `${tf.probability * 100}%`;
+  tfBar.style.width = `${Math.max(5, tf.probability * 100)}%`;
   tfBar.className = `prob-bar-fill ${isTfHit ? '' : 'bar-nohit'}`;
 
-  // Consensus Box
+  // 4. Painel de Inteligência Artificial
+  if (pred.ai_analysis) {
+    const ai = pred.ai_analysis;
+    const badge = document.getElementById('ai-user-badge');
+    badge.textContent = ai.user_classification || '🔥 Fenômeno de Streaming';
+    document.getElementById('ai-summary-text').textContent = ai.ai_summary || '';
+    document.getElementById('ai-user-desc-text').textContent = ai.user_desc || '';
+    document.getElementById('ai-model-rationale-text').textContent = ai.model_rationale || '';
+  }
+
+  // 5. Consensus Box
   const consensusBox = document.getElementById('consensus-box');
   const consensusIcon = document.getElementById('consensus-icon');
   const consensusTitle = document.getElementById('consensus-title');

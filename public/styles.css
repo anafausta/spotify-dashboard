@@ -1040,6 +1040,126 @@ body.dark-theme .matrix-quadrant.fn {
   border-radius: 9999px;
 }
 
+/* ================= AI INTELLIGENCE PANEL ================= */
+.ai-intelligence-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--spotify-green);
+  border-radius: var(--radius-lg);
+  padding: 1.35rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  background: linear-gradient(180deg, rgba(21, 128, 61, 0.03) 0%, var(--bg-surface) 100%);
+}
+
+body.dark-theme .ai-intelligence-panel {
+  background: linear-gradient(180deg, rgba(29, 185, 84, 0.05) 0%, var(--bg-surface) 100%);
+}
+
+.ai-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.15rem;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.ai-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ai-icon-badge {
+  font-size: 1.5rem;
+  background: var(--spotify-green-badge);
+  border-radius: var(--radius-md);
+  padding: 0.35rem 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.ai-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 0.15rem;
+}
+
+.ai-classification-badge {
+  font-size: 0.775rem;
+  font-weight: 750;
+  padding: 0.45rem 0.95rem;
+  border-radius: 9999px;
+  background: var(--spotify-green-badge);
+  color: var(--spotify-green);
+  border: 1px solid rgba(21, 128, 61, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.ai-content-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.ai-card-box {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.15rem;
+}
+
+.ai-card-box.full-width {
+  grid-column: span 2;
+}
+
+.ai-box-label {
+  font-size: 0.75rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  margin-bottom: 0.45rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ai-box-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.ai-box-text strong {
+  color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+  .ai-content-grid {
+    grid-template-columns: 1fr;
+  }
+  .ai-card-box.full-width {
+    grid-column: span 1;
+  }
+  .ai-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 /* Inference Section */
 .inference-section {
   background: var(--bg-surface-elevated);

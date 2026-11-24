@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spotify Hit Prediction & Analytics — EDA & Machine Learning</title>
+  <title>Spotify Hit Prediction & Analytics — EDA & Machine Learning com IA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -22,7 +22,7 @@
         </div>
         <div>
           <h1 class="brand-title">Spotify Intelligence</h1>
-          <p class="brand-subtitle">EDA & Previsão de Hits com Machine Learning (Base de 1,18M faixas)</p>
+          <p class="brand-subtitle">EDA, Previsão de Hits & Diagnóstico com Inteligência Artificial (1,18M faixas)</p>
         </div>
       </div>
 
@@ -50,7 +50,7 @@
               <circle cx="6" cy="18" r="3"></circle>
               <circle cx="18" cy="16" r="3"></circle>
             </svg>
-            Classificador de Música
+            Classificador de Música com IA
           </button>
         </nav>
       </div>
@@ -236,8 +236,8 @@
         <!-- Search & Control Column -->
         <div class="predict-search-panel">
           <div class="panel-header">
-            <h2 class="panel-title">Buscar ou Testar uma Música</h2>
-            <p class="panel-desc">Digite o nome da faixa ou artista para carregar as características sonoras e rodar os 3 modelos de Inteligência Artificial em tempo real.</p>
+            <h2 class="panel-title">Pesquisar Qualquer Música com IA</h2>
+            <p class="panel-desc">Digite o nome de qualquer música ou artista. Nossa IA pesquisa e identifica os atributos acústicos, sintetiza o comportamento dos ouvintes e roda os 3 modelos preditivos em tempo real.</p>
           </div>
 
           <div class="search-box">
@@ -245,7 +245,7 @@
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <input type="text" id="song-search-input" class="search-input" placeholder="Ex: Flowers, Blinding Lights, As It Was, Bohemian Rhapsody..." autocomplete="off">
+            <input type="text" id="song-search-input" class="search-input" placeholder="Ex: Cruel Summer, Espresso, Evidências, Bohemian Rhapsody, Envolver..." autocomplete="off">
             <button id="clear-search-btn" class="clear-btn" style="display: none;" title="Limpar busca">&times;</button>
           </div>
 
@@ -253,12 +253,12 @@
           <div class="quick-suggestions">
             <span class="quick-title">Sugestões de teste rápido:</span>
             <div class="pills-wrapper">
+              <button class="quick-pill" data-song="Cruel Summer" data-artist="Taylor Swift">Cruel Summer — Taylor Swift</button>
+              <button class="quick-pill" data-song="Espresso" data-artist="Sabrina Carpenter">Espresso — Sabrina Carpenter</button>
+              <button class="quick-pill" data-song="Envolver" data-artist="Anitta">Envolver — Anitta</button>
               <button class="quick-pill" data-song="Flowers" data-artist="Miley Cyrus">Flowers — Miley Cyrus</button>
-              <button class="quick-pill" data-song="Blinding Lights" data-artist="The Weeknd">Blinding Lights — The Weeknd</button>
-              <button class="quick-pill" data-song="As It Was" data-artist="Harry Styles">As It Was — Harry Styles</button>
-              <button class="quick-pill" data-song="Shape of You" data-artist="Ed Sheeran">Shape of You — Ed Sheeran</button>
-              <button class="quick-pill" data-song="Take on Me" data-artist="a-ha">Take on Me — a-ha</button>
-              <button class="quick-pill" data-song="Lordi" data-artist="Lordi">Hard Rock Hallelujah (Não-Hit)</button>
+              <button class="quick-pill" data-song="Evidências" data-artist="Chitãozinho & Xororó">Evidências — Clássico</button>
+              <button class="quick-pill" data-song="Hard Rock Hallelujah" data-artist="Lordi">Lordi (Não-Hit)</button>
             </div>
           </div>
 
@@ -279,7 +279,7 @@
               </svg>
             </div>
             <h3>Nenhuma música selecionada</h3>
-            <p>Clique em uma das sugestões ao lado ou pesquise pelo nome de uma faixa para visualizar seus dados acústicos e rodar os modelos RandomForest, XGBoost e Rede Neural MLP.</p>
+            <p>Clique em uma das sugestões ao lado ou pesquise pelo nome de qualquer faixa para visualizar seus dados acústicos, a análise de IA sobre a recepção do público e rodar os modelos RandomForest, XGBoost e Rede Neural MLP.</p>
           </div>
 
           <!-- Active Song View -->
@@ -300,7 +300,7 @@
 
               <!-- Real Dataset Classification Box -->
               <div class="dataset-verdict-box" id="dataset-verdict-card">
-                <div class="verdict-label">Classificação no Dataset Real</div>
+                <div class="verdict-label">Classificação no Ecossistema</div>
                 <div class="verdict-status" id="dataset-status-badge">HIT 🏆</div>
                 <div class="popularity-meter">
                   <div class="meter-label">
@@ -349,12 +349,60 @@
               </div>
             </div>
 
+            <!-- NOVO: PAINEL DE INTELIGÊNCIA ARTIFICIAL (DIAGNÓSTICO & USUÁRIOS) -->
+            <div class="ai-intelligence-panel">
+              <div class="ai-header">
+                <div class="ai-title-wrap">
+                  <div class="ai-icon-badge">✨🤖</div>
+                  <div>
+                    <h3 class="ai-title">Diagnóstico com Inteligência Artificial</h3>
+                    <p class="ai-subtitle">Síntese de produção acústica e percepção da comunidade de ouvintes</p>
+                  </div>
+                </div>
+                <div class="ai-classification-badge" id="ai-user-badge">
+                  🔥 Fenômeno de Streaming
+                </div>
+              </div>
+
+              <div class="ai-content-grid">
+                <!-- Caixa 1: Resumo da IA -->
+                <div class="ai-card-box">
+                  <div class="ai-box-label">
+                    <span>💡</span> Identidade Sonora & Produção
+                  </div>
+                  <p class="ai-box-text" id="ai-summary-text">
+                    Processando características musicais com inteligência artificial...
+                  </p>
+                </div>
+
+                <!-- Caixa 2: Como os Usuários Classificam -->
+                <div class="ai-card-box">
+                  <div class="ai-box-label">
+                    <span>👥</span> Como os Ouvintes Classificam
+                  </div>
+                  <p class="ai-box-text" id="ai-user-desc-text">
+                    Carregando comportamento e recepção nas plataformas de streaming...
+                  </p>
+                </div>
+
+                <!-- Caixa 3: Diagnóstico dos Modelos de ML -->
+                <div class="ai-card-box full-width">
+                  <div class="ai-box-label">
+                    <span>📊</span> Raciocínio dos Modelos de Machine Learning
+                  </div>
+                  <p class="ai-box-text" id="ai-model-rationale-text">
+                    Avaliando correlação de dançabilidade, loudness e volume com os limiares de decisão...
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <!-- Running Inference Section -->
             <div class="inference-section">
               <div class="inference-header">
                 <div>
                   <h3 class="inference-title">Predição em Tempo Real dos 3 Modelos</h3>
-                  <p class="inference-desc">Execução simultânea de RandomForest, XGBoost e Rede Neural MLP com os pesos da Fase 2</p>
+                  <p class="inference-desc">Execução simultânea de RandomForest, XGBoost e Rede Neural MLP específica para esta faixa</p>
                 </div>
                 <button id="re-run-btn" class="btn-primary">
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
@@ -368,7 +416,7 @@
               <!-- Loading Indicator -->
               <div id="inference-loading" class="inference-loading" style="display: none;">
                 <div class="spinner"></div>
-                <span>Processando atributos nos modelos de Machine Learning...</span>
+                <span>Processando atributos nos modelos de Machine Learning e IA...</span>
               </div>
 
               <!-- Models Results Grid -->
@@ -376,13 +424,13 @@
                 <!-- Random Forest Card -->
                 <div class="model-pred-card" id="card-rf">
                   <div class="model-badge">Random Forest</div>
-                  <div class="model-pred-status" id="rf-status">HIT</div>
+                  <div class="model-pred-status" id="rf-status">Calculando...</div>
                   <div class="prob-wrapper">
                     <span class="prob-label">Probabilidade Calculada:</span>
-                    <strong class="prob-num" id="rf-prob">74.5%</strong>
+                    <strong class="prob-num" id="rf-prob">--%</strong>
                   </div>
                   <div class="prob-bar-bg">
-                    <div class="prob-bar-fill" id="rf-bar" style="width: 74.5%;"></div>
+                    <div class="prob-bar-fill" id="rf-bar" style="width: 0%;"></div>
                   </div>
                   <div class="model-threshold-note">Limiar de corte: <strong>0.69</strong> (ajuste balanceado)</div>
                 </div>
@@ -390,13 +438,13 @@
                 <!-- XGBoost Card -->
                 <div class="model-pred-card highlighted-card" id="card-xgb">
                   <div class="model-badge highlight-badge">XGBoost (Melhor Modelo) ⭐</div>
-                  <div class="model-pred-status" id="xgb-status">HIT</div>
+                  <div class="model-pred-status" id="xgb-status">Calculando...</div>
                   <div class="prob-wrapper">
                     <span class="prob-label">Probabilidade Calculada:</span>
-                    <strong class="prob-num" id="xgb-prob">81.2%</strong>
+                    <strong class="prob-num" id="xgb-prob">--%</strong>
                   </div>
                   <div class="prob-bar-bg">
-                    <div class="prob-bar-fill" id="xgb-bar" style="width: 81.2%;"></div>
+                    <div class="prob-bar-fill" id="xgb-bar" style="width: 0%;"></div>
                   </div>
                   <div class="model-threshold-note">Limiar de corte: <strong>0.52</strong> (ROC-AUC 0.8864)</div>
                 </div>
@@ -404,13 +452,13 @@
                 <!-- TensorFlow MLP Card -->
                 <div class="model-pred-card" id="card-tf">
                   <div class="model-badge">TensorFlow MLP (Rede Neural)</div>
-                  <div class="model-pred-status" id="tf-status">HIT</div>
+                  <div class="model-pred-status" id="tf-status">Calculando...</div>
                   <div class="prob-wrapper">
                     <span class="prob-label">Probabilidade Calculada:</span>
-                    <strong class="prob-num" id="tf-prob">78.0%</strong>
+                    <strong class="prob-num" id="tf-prob">--%</strong>
                   </div>
                   <div class="prob-bar-bg">
-                    <div class="prob-bar-fill" id="tf-bar" style="width: 78.0%;"></div>
+                    <div class="prob-bar-fill" id="tf-bar" style="width: 0%;"></div>
                   </div>
                   <div class="model-threshold-note">Limiar de corte: <strong>0.51</strong> (sigmoide calibrada)</div>
                 </div>
@@ -421,7 +469,7 @@
                 <div class="consensus-icon" id="consensus-icon">🏆</div>
                 <div>
                   <h4 class="consensus-title" id="consensus-title">Consenso dos Modelos: HIT PROVÁVEL</h4>
-                  <p class="consensus-desc" id="consensus-desc">3 de 3 modelos classificam esta faixa com potencial de sucesso comercial expressivo.</p>
+                  <p class="consensus-desc" id="consensus-desc">Analisando o consenso entre os 3 algoritmos preditivos...</p>
                 </div>
               </div>
             </div>
