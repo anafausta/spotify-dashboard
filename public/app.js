@@ -1,0 +1,624 @@
+// Spotify Hit Prediction & Analytics App
+
+let statsData = null;
+let currentSelectedSong = null;
+let searchDebounceTimeout = null;
+let charts = {};
+
+document.addEventListener('DOMContentLoaded', () => {
+  initTabs();
+  loadStats();
+  initPredictSearch();
+});
+
+// Tab Switching
+function initTabs() {
+  const tabButtons = document.querySelectorAll('.tab-btn');
+  const tabContents = document.querySelectorAll('.tab-content');
+
+  tabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetTabId = btn.getAttribute('data-tab');
+      tabButtons.forEach(b => b.classList.remove('active'));
+      tabContents.forEach(c => c.classList.remove('active'));
+
+      btn.classList.add('active');
+      const activeContent = document.getElementById(targetTabId);
+      if (activeContent) {
+        activeContent.classList.add('active');
+      }
+
+      // Re-render charts on tab switch if needed
+      if (targetTabId === 'tab-dashboard') {
+        Object.values(charts).forEach(ch => ch.resize && ch.resize());
+      }
+    });
+  });
+}
+
+// Load Real Stats from Backend
+async function loadStats() {
+  try {
+    const res = await fetch('/api/stats');
+    statsData = await res.json();
+    renderSummaryKPIs(statsData.summary);
+    renderModelsTable(statsData.models_table);
+    renderMatrixPills(statsData.models_table);
+    initCharts(statsData);
+  } catch (err) {
+    console.error('Falha ao carregar estatísticas:', err);
+  }
+}
+
+// Render Summary KPIs
+function renderSummaryKPIs(summary) {
+  if (!summary) return;
+  document.getElementById('kpi-tracks').textContent = Number(summary.total_tracks).toLocaleString('pt-BR');
+  document.getElementById('kpi-hitrate').textContent = (summary.hit_rate * 100).toFixed(2) + '%';
+  document.getElementById('kpi-best-roc').textContent = summary.best_roc_auc.toFixed(4);
+  document.getElementById('kpi-lift').textContent = summary.lift_top5.toFixed(2) + 'x';
+}
+
+// Render Models Comparison Table
+function renderModelsTable(models) {
+  const tbody = document.getElementById('models-table-body');
+  if (!tbody || !models) return;
+
+  tbody.innerHTML = models.map((m, idx) => `
+    <tr>
+      <td>
+        <div class="table-model-name">
+          ${m.modelo}
+          ${idx === 0 ? '<span class="best-badge">Melhor</span>' : ''}
+        </div>
+      </td>
+      <td class="metric-highlight">${m.roc_auc.toFixed(4)}</td>
+      <td class="metric-highlight">${m.pr_auc.toFixed(4)}</td>
+      <td>${m.f1_hit.toFixed(4)}</td>
+      <td>${(m.recall_hit * 100).toFixed(1)}%</td>
+      <td>${(m.precisao_hit * 100).toFixed(1)}%</td>
+      <td>${(m.acuracia * 100).toFixed(2)}%</td>
+      <td><span class="badge">${m.limiar.toFixed(2)}</span></td>
+      <td style="color: var(--accent-cyan); font-weight: 700;">${m.lift_top5.toFixed(2)}x</td>
+      <td style="color: var(--text-muted); font-size: 0.8rem;">${m.status}</td>
+    </tr>
+  `).join('');
+}
+
+// Render Confusion Matrix Pill Selector
+function renderMatrixPills(models) {
+  const container = document.getElementById('matrix-model-pills');
+  if (!container || !models) return;
+
+  container.innerHTML = models.map((m, idx) => `
+    <button class="matrix-pill ${idx === 0 ? 'active' : ''}" data-index="${idx}">
+      ${m.modelo}
+    </button>
+  `).join('');
+
+  container.querySelectorAll('.matrix-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      container.querySelectorAll('.matrix-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const idx = parseInt(btn.getAttribute('data-index'), 10);
+      showMatrixForModel(models[idx]);
+    });
+  });
+
+  if (models.length > 0) {
+    showMatrixForModel(models[0]);
+  }
+}
+
+function showMatrixForModel(m) {
+  const display = document.getElementById('matrix-display-container');
+  if (!display || !m) return;
+
+  display.innerHTML = `
+    <div class="matrix-quadrant tp">
+      <div class="quad-name">Verdadeiro Positivo (TP)</div>
+      <div class="quad-val" style="color: var(--spotify-green);">${Number(m.tp).toLocaleString('pt-BR')}</div>
+      <div class="quad-desc">Hits reais corretamente detectados</div>
+    </div>
+    <div class="matrix-quadrant fp">
+      <div class="quad-name">Falso Positivo (FP)</div>
+      <div class="quad-val" style="color: var(--accent-amber);">${Number(m.fp).toLocaleString('pt-BR')}</div>
+      <div class="quad-desc">Não-hits previstos como hit</div>
+    </div>
+    <div class="matrix-quadrant fn">
+      <div class="quad-name">Falso Negativo (FN)</div>
+      <div class="quad-val" style="color: var(--accent-rose);">${Number(m.fn).toLocaleString('pt-BR')}</div>
+      <div class="quad-desc">Hits reais perdidos pelo modelo</div>
+    </div>
+    <div class="matrix-quadrant tn">
+      <div class="quad-name">Verdadeiro Negativo (TN)</div>
+      <div class="quad-val" style="color: #60a5fa;">${Number(m.tn).toLocaleString('pt-BR')}</div>
+      <div class="quad-desc">Não-hits corretamente descartados</div>
+    </div>
+  `;
+}
+
+// Initialize Interactive Charts
+function initCharts(data) {
+  Chart.defaults.color = '#a1a1aa';
+  Chart.defaults.font.family = "'Plus Jakarta Sans', system-ui, sans-serif";
+
+  // Chart 1: Models Comparison
+  const ctxModels = document.getElementById('chartModelsComparison');
+  if (ctxModels && data.models_table) {
+    charts.models = new Chart(ctxModels, {
+      type: 'bar',
+      data: {
+        labels: data.models_table.map(m => m.modelo),
+        datasets: [
+          {
+            label: 'ROC-AUC',
+            data: data.models_table.map(m => m.roc_auc),
+            backgroundColor: '#1db954',
+            borderRadius: 4
+          },
+          {
+            label: 'PR-AUC (Foco Desbalanceamento)',
+            data: data.models_table.map(m => m.pr_auc),
+            backgroundColor: '#06b6d4',
+            borderRadius: 4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 12 } }
+        },
+        scales: {
+          y: { min: 0, max: 1.0, grid: { color: 'rgba(255,255,255,0.05)' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  // Chart 2: Feature Importance
+  const ctxFeat = document.getElementById('chartFeatureImportance');
+  if (ctxFeat && data.feature_importance) {
+    const topFeats = data.feature_importance.slice(0, 8);
+    charts.features = new Chart(ctxFeat, {
+      type: 'bar',
+      data: {
+        labels: topFeats.map(f => f.label),
+        datasets: [
+          {
+            label: 'XGBoost',
+            data: topFeats.map(f => f.importance_xgb),
+            backgroundColor: '#1db954',
+            borderRadius: 4
+          },
+          {
+            label: 'Random Forest',
+            data: topFeats.map(f => f.importance_rf),
+            backgroundColor: '#3b82f6',
+            borderRadius: 4
+          }
+        ]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 12 } }
+        },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.05)' } },
+          y: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  // Chart 3: Target Distribution Doughnut
+  const ctxTarget = document.getElementById('chartTargetDistribution');
+  if (ctxTarget && data.eda_insights) {
+    charts.target = new Chart(ctxTarget, {
+      type: 'doughnut',
+      data: {
+        labels: data.eda_insights.target_distribution.map(t => t.label),
+        datasets: [{
+          data: data.eda_insights.target_distribution.map(t => t.count),
+          backgroundColor: data.eda_insights.target_distribution.map(t => t.color),
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 12 } }
+        },
+        cutout: '72%'
+      }
+    });
+  }
+
+  // Chart 4: Audio Profile
+  const ctxAudio = document.getElementById('chartAudioProfile');
+  if (ctxAudio && data.eda_insights) {
+    const p = data.eda_insights.audio_averages;
+    charts.audio = new Chart(ctxAudio, {
+      type: 'bar',
+      data: {
+        labels: ['Dançabilidade', 'Energia', 'Valência', 'Acústica', 'Speechiness'],
+        datasets: [
+          {
+            label: 'Hits (>= 50)',
+            data: [p.danceability.hit, p.energy.hit, p.valence.hit, p.acousticness.hit, p.speechiness.hit],
+            backgroundColor: '#1db954',
+            borderRadius: 4
+          },
+          {
+            label: 'Não-Hits',
+            data: [p.danceability.non_hit, p.energy.non_hit, p.valence.non_hit, p.acousticness.non_hit, p.speechiness.non_hit],
+            backgroundColor: '#475569',
+            borderRadius: 4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 12 } }
+        },
+        scales: {
+          y: { min: 0, max: 0.8, grid: { color: 'rgba(255,255,255,0.05)' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  // Chart 5: Genres Performance
+  const ctxGenres = document.getElementById('chartGenres');
+  if (ctxGenres && data.eda_insights) {
+    charts.genres = new Chart(ctxGenres, {
+      type: 'bar',
+      data: {
+        labels: data.eda_insights.top_genres.map(g => g.genre),
+        datasets: [{
+          label: '% de Hits no Gênero',
+          data: data.eda_insights.top_genres.map(g => g.hit_rate),
+          backgroundColor: '#06b6d4',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            grid: { color: 'rgba(255,255,255,0.05)' },
+            ticks: { callback: v => v + '%' }
+          },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  // Chart 6: Temporal Evolution
+  const ctxTemporal = document.getElementById('chartTemporal');
+  if (ctxTemporal && data.eda_insights) {
+    const t = data.eda_insights.temporal_evolution;
+    charts.temporal = new Chart(ctxTemporal, {
+      type: 'line',
+      data: {
+        labels: t.map(d => 'Década ' + d.decade),
+        datasets: [
+          {
+            label: 'Dançabilidade Média',
+            data: t.map(d => d.avg_dance),
+            borderColor: '#1db954',
+            backgroundColor: 'rgba(29, 185, 84, 0.1)',
+            fill: true,
+            tension: 0.3
+          },
+          {
+            label: 'Energia Média',
+            data: t.map(d => d.avg_energy),
+            borderColor: '#f59e0b',
+            tension: 0.3
+          },
+          {
+            label: 'Taxa de Hits (%) / 10',
+            data: t.map(d => d.hit_pct / 10),
+            borderColor: '#38bdf8',
+            borderDash: [5, 5],
+            tension: 0.3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 12 } }
+        },
+        scales: {
+          y: { grid: { color: 'rgba(255,255,255,0.05)' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+}
+
+// ================= PREDICT / SEARCH LOGIC =================
+function initPredictSearch() {
+  const input = document.getElementById('song-search-input');
+  const clearBtn = document.getElementById('clear-search-btn');
+  const resultsContainer = document.getElementById('search-results-container');
+  const quickPills = document.querySelectorAll('.quick-pill');
+  const reRunBtn = document.getElementById('re-run-btn');
+
+  // Load initial popular suggestions
+  fetchResults('');
+
+  input.addEventListener('input', (e) => {
+    const q = e.target.value.trim();
+    clearBtn.style.display = q ? 'block' : 'none';
+
+    clearTimeout(searchDebounceTimeout);
+    searchDebounceTimeout = setTimeout(() => {
+      fetchResults(q);
+    }, 250);
+  });
+
+  clearBtn.addEventListener('click', () => {
+    input.value = '';
+    clearBtn.style.display = 'none';
+    fetchResults('');
+    input.focus();
+  });
+
+  quickPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      const songTitle = pill.getAttribute('data-song');
+      input.value = songTitle;
+      clearBtn.style.display = 'block';
+      fetchResults(songTitle, true);
+    });
+  });
+
+  if (reRunBtn) {
+    reRunBtn.addEventListener('click', () => {
+      if (currentSelectedSong) {
+        executeModelsInference(currentSelectedSong);
+      }
+    });
+  }
+}
+
+async function fetchResults(q, autoSelectFirst = false) {
+  const container = document.getElementById('search-results-container');
+  try {
+    const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    renderSearchResults(data.results || [], autoSelectFirst);
+  } catch (err) {
+    console.error('Erro na busca de músicas:', err);
+    container.innerHTML = `<div class="empty-state" style="padding: 1.5rem;"><p>Erro ao conectar ao banco de músicas.</p></div>`;
+  }
+}
+
+function renderSearchResults(songs, autoSelectFirst = false) {
+  const container = document.getElementById('search-results-container');
+  if (!container) return;
+
+  if (songs.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state" style="padding: 1.5rem;">
+        <p>Nenhuma música correspondente encontrada no dataset.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = songs.map(song => `
+    <div class="search-result-item" data-id="${song.title}">
+      <div class="result-main">
+        <div class="result-title">${escapeHtml(song.title)}</div>
+        <div class="result-sub">${escapeHtml(song.track_artist || 'Desconhecido')} &bull; ${song.release_year || 'N/A'} &bull; ${song.genre_l1 || 'Outro'}</div>
+      </div>
+      <div>
+        <span class="result-tag ${song.is_hit === 1 ? 'tag-hit' : 'tag-nohit'}">
+          ${song.is_hit === 1 ? 'Hit' : 'Não-Hit'}
+        </span>
+      </div>
+    </div>
+  `).join('');
+
+  // Add click events
+  const items = container.querySelectorAll('.search-result-item');
+  items.forEach((item, idx) => {
+    item.addEventListener('click', () => {
+      items.forEach(it => it.classList.remove('active'));
+      item.classList.add('active');
+      selectSong(songs[idx]);
+    });
+  });
+
+  if (autoSelectFirst && songs.length > 0) {
+    items[0].classList.add('active');
+    selectSong(songs[0]);
+  }
+}
+
+function selectSong(song) {
+  currentSelectedSong = song;
+
+  // Show active view, hide empty state
+  document.getElementById('predict-empty-state').style.display = 'none';
+  const card = document.getElementById('predict-active-card');
+  card.style.display = 'block';
+
+  // Fill Metadata
+  document.getElementById('meta-title').textContent = song.title;
+  document.getElementById('meta-artist').textContent = song.track_artist || 'Artista Desconhecido';
+  document.getElementById('meta-genre').textContent = song.genre_l1 || 'Gênero Indefinido';
+  document.getElementById('meta-year').textContent = song.release_year || 'Ano N/A';
+
+  const ms = song.duration_ms || 200000;
+  const mins = Math.floor(ms / 60000);
+  const secs = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
+  document.getElementById('meta-duration').textContent = `${mins}:${secs}`;
+  document.getElementById('meta-key').textContent = `Tom: ${getKeyName(song.key, song.mode)}`;
+  document.getElementById('meta-explicit').textContent = song.explicit_flag ? 'Explícita (+18)' : 'Livre';
+
+  // Dataset real verdict
+  const pop = song.track_popularity || 0;
+  const isHit = song.is_hit === 1 || pop >= 50;
+
+  document.getElementById('meta-popularity-val').textContent = `${pop}/100`;
+  document.getElementById('meta-popularity-bar').style.width = `${pop}%`;
+
+  const statusBadge = document.getElementById('dataset-status-badge');
+  if (isHit) {
+    statusBadge.textContent = 'HIT 🏆';
+    statusBadge.className = 'verdict-status verdict-hit';
+  } else {
+    statusBadge.textContent = 'NÃO-HIT 🎵';
+    statusBadge.className = 'verdict-status verdict-nohit';
+  }
+
+  // Audio features
+  const dance = (song.danceability || 0).toFixed(2);
+  const energy = (song.energy || 0).toFixed(2);
+  const valence = (song.valence || 0).toFixed(2);
+  const acoustic = (song.acousticness || 0).toFixed(2);
+  const loudness = song.loudness != null ? song.loudness.toFixed(1) + ' dB' : '-8.0 dB';
+  const tempo = song.tempo ? Math.round(song.tempo) + ' BPM' : '120 BPM';
+
+  document.getElementById('feat-dance').textContent = dance;
+  document.getElementById('bar-dance').style.width = `${Math.min(100, (song.danceability || 0) * 100)}%`;
+
+  document.getElementById('feat-energy').textContent = energy;
+  document.getElementById('bar-energy').style.width = `${Math.min(100, (song.energy || 0) * 100)}%`;
+
+  document.getElementById('feat-valence').textContent = valence;
+  document.getElementById('bar-valence').style.width = `${Math.min(100, (song.valence || 0) * 100)}%`;
+
+  document.getElementById('feat-acoustic').textContent = acoustic;
+  document.getElementById('bar-acoustic').style.width = `${Math.min(100, (song.acousticness || 0) * 100)}%`;
+
+  document.getElementById('feat-loudness').textContent = loudness;
+  document.getElementById('bar-loudness').style.width = `${Math.max(10, Math.min(100, ((song.loudness || -20) + 30) * 3))}%`;
+
+  document.getElementById('feat-tempo').textContent = tempo;
+  document.getElementById('bar-tempo').style.width = `${Math.min(100, ((song.tempo || 120) / 200) * 100)}%`;
+
+  // Execute inference on the 3 models
+  executeModelsInference(song);
+}
+
+// Call Backend to Run RandomForest, XGBoost, and TensorFlow
+async function executeModelsInference(song) {
+  const loading = document.getElementById('inference-loading');
+  const resultsGrid = document.getElementById('models-results-container');
+  const consensusBox = document.getElementById('consensus-box');
+
+  loading.style.display = 'flex';
+
+  try {
+    const res = await fetch('/api/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(song)
+    });
+
+    const data = await res.json();
+    loading.style.display = 'none';
+
+    if (data.error) {
+      console.error('Erro de predição:', data.error);
+      return;
+    }
+
+    renderInferenceResults(data);
+  } catch (err) {
+    loading.style.display = 'none';
+    console.error('Erro na chamada de inferência:', err);
+  }
+}
+
+function renderInferenceResults(pred) {
+  // Format display helper
+  const fmt = (p) => p === 'HIT' ? 'HIT' : 'NÃO-HIT';
+
+  // 1. Random Forest
+  const rf = pred.random_forest;
+  const isRfHit = rf.prediction === 'HIT';
+  const rfStatus = document.getElementById('rf-status');
+  rfStatus.textContent = fmt(rf.prediction);
+  rfStatus.className = `model-pred-status ${isRfHit ? 'status-hit' : 'status-nohit'}`;
+  document.getElementById('rf-prob').textContent = (rf.probability * 100).toFixed(1) + '%';
+  const rfBar = document.getElementById('rf-bar');
+  rfBar.style.width = `${rf.probability * 100}%`;
+  rfBar.className = `prob-bar-fill ${isRfHit ? '' : 'bar-nohit'}`;
+
+  // 2. XGBoost
+  const xgb = pred.xgboost;
+  const isXgbHit = xgb.prediction === 'HIT';
+  const xgbStatus = document.getElementById('xgb-status');
+  xgbStatus.textContent = fmt(xgb.prediction);
+  xgbStatus.className = `model-pred-status ${isXgbHit ? 'status-hit' : 'status-nohit'}`;
+  document.getElementById('xgb-prob').textContent = (xgb.probability * 100).toFixed(1) + '%';
+  const xgbBar = document.getElementById('xgb-bar');
+  xgbBar.style.width = `${xgb.probability * 100}%`;
+  xgbBar.className = `prob-bar-fill ${isXgbHit ? '' : 'bar-nohit'}`;
+
+  // 3. TensorFlow MLP
+  const tf = pred.tensorflow;
+  const isTfHit = tf.prediction === 'HIT';
+  const tfStatus = document.getElementById('tf-status');
+  tfStatus.textContent = fmt(tf.prediction);
+  tfStatus.className = `model-pred-status ${isTfHit ? 'status-hit' : 'status-nohit'}`;
+  document.getElementById('tf-prob').textContent = (tf.probability * 100).toFixed(1) + '%';
+  const tfBar = document.getElementById('tf-bar');
+  tfBar.style.width = `${tf.probability * 100}%`;
+  tfBar.className = `prob-bar-fill ${isTfHit ? '' : 'bar-nohit'}`;
+
+  // Consensus Box
+  const consensusBox = document.getElementById('consensus-box');
+  const consensusIcon = document.getElementById('consensus-icon');
+  const consensusTitle = document.getElementById('consensus-title');
+  const consensusDesc = document.getElementById('consensus-desc');
+
+  if (pred.consensus === 'HIT') {
+    consensusBox.className = 'consensus-banner';
+    consensusIcon.textContent = '🏆';
+    consensusTitle.textContent = `Consenso dos Modelos: HIT (${pred.votes_hit} de 3 votos)`;
+    consensusDesc.textContent = `Os algoritmos convergiram apontando alta probabilidade comercial com base no perfil acústico e contexto temporal da faixa.`;
+  } else {
+    consensusBox.className = 'consensus-banner banner-nohit';
+    consensusIcon.textContent = '🎵';
+    consensusTitle.textContent = `Consenso dos Modelos: NÃO-HIT (${3 - pred.votes_hit} de 3 votos)`;
+    consensusDesc.textContent = `As características sonoras da música situam-se fora do padrão típico de sucessos comerciais massivos no Spotify.`;
+  }
+}
+
+// Helpers
+function getKeyName(key, mode) {
+  const keys = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const k = keys[key] || 'C';
+  const m = mode === 1 ? 'Maior' : 'Menor';
+  return `${k} ${m}`;
+}
+
+function escapeHtml(text) {
+  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+  return String(text).replace(/[&<>"']/g, m => map[m]);
+}
